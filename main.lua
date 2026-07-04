@@ -291,7 +291,7 @@ handles.Faces = Faces.new(Enum.NormalId.Top)
 
 
 local runservice = game:GetService("RunService")
-local navigationconstant = 1
+local navigationconstant = 4.5
 
 local players = game:GetService("Players")
 local localplayer = players.LocalPlayer
