@@ -381,7 +381,15 @@ mainheart = game:GetService("RunService").Stepped:Connect(function(dt)
 	    local targetAccelVector = target:GetAttribute("CurrentAcceleration") or Vector3.zero
 	    
 	    local total_a_c = calculate3DAPN(navigationconstant, V_c, losRateVector, losDirection, targetAccelVector)
-		missile.AssemblyLinearVelocity = missile.AssemblyLinearVelocity + (total_a_c * dt)
+		local local_accel = missile.CFrame:VectorToObjectSpace(total_a_c)
+
+		local pitchTorque = local_accel.Y * sensitivityFactor
+		local yawTorque = local_accel.X * sensitivityFactor
+
+		Instance.new("BodyGyro").Parent = missile
+		missile.BodyGyro.MaxTorque = Vector3.new(1, 1, 1) * 100000
+		missile.BodyGyro.CFrame = missile.CFrame * CFrame.Angles(pitchTorque, yawTorque, 0)
+			
 		if (missile.Position-targetPos).Magnitude < 15 then
 				local newdist = (missile.Position-(targetPos+(target.Velocity*ping))).Magnitude
 				task.wait(newdist/(missilevelocity.Magnitude))
