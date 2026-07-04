@@ -391,8 +391,14 @@ mainheart = game:GetService("RunService").Stepped:Connect(function(dt)
 		local pitchTorque = local_accel.Y * sensitivityFactor
 		local yawTorque = local_accel.X * sensitivityFactor
 
-		missile.BodyGyro.MaxTorque = Vector3.new(1, 1, 1) * 100000
-		missile.BodyGyro.CFrame = missile.CFrame * CFrame.Angles(pitchTorque, yawTorque, 0)
+		local steeringDir = (missile.AssemblyLinearVelocity.Unit + (total_a_c * 0.01)).Unit
+	    local targetCFrame = CFrame.lookAt(missile.Position, missile.Position + steeringDir)
+	    
+	    -- 3. Update the Gyro (This is the ONLY rotation code you need)
+	    bg.CFrame = targetCFrame
+	    
+	    -- 4. Move forward
+	    missile.AssemblyLinearVelocity = missile.CFrame.LookVector * speed
 			
 		if (missile.Position-targetPos).Magnitude < 15 then
 				local newdist = (missile.Position-(targetPos+(target.Velocity*ping))).Magnitude
