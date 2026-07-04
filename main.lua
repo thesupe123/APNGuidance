@@ -359,60 +359,62 @@ local missilesmoothedaccel = Vector3.new(0,0,0)
 
 local targetlastacceleration = Vector3.new(0,0,0)
 local bg = Instance.new("BodyGyro")
-bg.MaxTorque = Vector3.new(1, 1, 1) * 100000 -- Adjust if too weak
-bg.P = 3000       -- "Stiffness" (Turn speed)
-bg.D = 500        -- "Damping" (Crucial for stopping the shake)
-bg.Parent = missile
+bg.MaxTorque = Vector3.new(1, 1, 1) * 1e7 -- High torque for snappy turns
+bg.P = 15000 -- Increase P for faster response
+bg.D = 800   -- Increase D to kill oscillation/shake
+bg.Parent = nil -- We will parent it only when we have a missile
 local sensitivityFactor = 50000
 local localplayer = game:GetService("Players").LocalPlayer
 local target = nil
 local speed = 1500
 local VirtualInputManager = game:GetService("VirtualInputManager")
 mainheart = game:GetService("RunService").Stepped:Connect(function(dt)
-	if targetPlayer and launch then
-		game.Workspace.CurrentCamera.CameraSubject = missile
-		target = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
-		missile = game.Workspace[localplayer.Name.." Aircraft"]:FindFirstChildOfClass("Folder").ExplosiveBlock.Decorate
-		bg.Parent = missile
-	end
-	if launch and target ~= nil then
-	    local ping = localplayer:GetNetworkPing()
-	    local targetPos = target.Position + (target.AssemblyLinearVelocity * ping)
-	    
-	    local r = targetPos - missile.Position
-	    local losDirection = r.Unit
-	    local V_c, _, _, losRateVector = getNavigationVariables(missile, target)
-	    
-	    local targetAccelVector = target:GetAttribute("CurrentAcceleration") or Vector3.zero
-	    
-	    local total_a_c = calculate3DAPN(navigationconstant, V_c, losRateVector, losDirection, targetAccelVector)
-		local local_accel = missile.CFrame:VectorToObjectSpace(total_a_c)
+	if not launch or not target then return end
 
-		local pitchTorque = local_accel.Y * sensitivityFactor
-		local yawTorque = local_accel.X * sensitivityFactor
+    -- Re-assign missile reference only if it's missing
+    if not missile or not missile.Parent then
+        local aircraft = game.Workspace:FindFirstChild(localplayer.Name.." Aircraft")
+        if aircraft then
+            local folder = aircraft:FindFirstChildOfClass("Folder")
+            missile = folder and folder:FindFirstChild("ExplosiveBlock") and folder.ExplosiveBlock.Decorate
+            if missile then bg.Parent = missile end
+        end
+    end
 
-		local steeringDir = (missile.AssemblyLinearVelocity.Unit + (total_a_c * 0.01)).Unit
-	    local targetCFrame = CFrame.lookAt(missile.Position, missile.Position + steeringDir)
-	    
-	    -- 3. Update the Gyro (This is the ONLY rotation code you need)
-	    bg.CFrame = targetCFrame
-	    
-	    -- 4. Move forward
-	    missile.AssemblyLinearVelocity = missile.CFrame.LookVector * speed
-			
-		if (missile.Position-targetPos).Magnitude < 15 then
-				local newdist = (missile.Position-(targetPos+(target.Velocity*ping))).Magnitude
-				task.wait(newdist/(missilevelocity.Magnitude))
-				for i,v in pairs(missile.Parent.Parent:GetChildren()) do
-					if v.Name == "ExplosiveBlock" then
-						v.Events.Explode:Fire(4)
-					end
-				end
-				launch = false
-				debounce = false
-				task.wait(3)
-				game.Workspace.CurrentCamera.CameraSubject = game.Players.LocalPlayer.Character.Humanoid
-				missile.Parent.Parent:Destroy()
-		end
-	end
+    if missile and target then
+        local ping = localplayer:GetNetworkPing()
+        local targetPos = target.Position + (target.AssemblyLinearVelocity * ping)
+        
+        -- Get Nav Variables
+        local V_c, _, _, losRateVector = getNavigationVariables(missile, target)
+        local targetAccelVector = target:GetAttribute("CurrentAcceleration") or Vector3.zero
+        
+        -- Calculate APN Command
+        local r = targetPos - missile.Position
+        local losDirection = r.Unit
+        local total_a_c = calculate3DAPN(navigationconstant, V_c, losRateVector, losDirection, targetAccelVector)
+        
+        -- STABILITY FIX: Instead of mapping torque directly, we map the command to the target rotation
+        -- We aim the missile slightly ahead of its current path based on the APN acceleration
+        local lookDir = (missile.AssemblyLinearVelocity.Unit + (total_a_c * 0.005)).Unit
+        bg.CFrame = CFrame.lookAt(missile.Position, missile.Position + lookDir)
+        
+        -- PROPULSION FIX: Ensure velocity matches the direction the gyro is forcing
+        missile.AssemblyLinearVelocity = missile.CFrame.LookVector * speed
+        
+        -- HIT DETECTION
+        if (missile.Position - targetPos).Magnitude < 20 then
+            -- Trigger explosion
+            local parentObj = missile.Parent.Parent
+            if parentObj then
+                for _, v in pairs(parentObj:GetChildren()) do
+                    if v.Name == "ExplosiveBlock" and v:FindFirstChild("Events") then
+                        v.Events.Explode:Fire(4)
+                    end
+                end
+            end
+            launch = false
+            -- Add cleanup logic here...
+        end
+    end
 end)
