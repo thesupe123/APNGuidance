@@ -291,8 +291,6 @@ handles.Faces = Faces.new(Enum.NormalId.Top)
 
 
 local runservice = game:GetService("RunService")
-local target = workspace.Jet
-local missile = script.Parent
 local navigationconstant = 4.5
 
 local players = game:GetService("Players")
@@ -374,22 +372,22 @@ mainheart = game:GetService("RunService").Stepped:Connect(function(dt)
 		missile = game.Workspace[localplayer.Name.." Aircraft"]:FindFirstChildOfClass("Folder").ExplosiveBlock.Decorate
 	end
 	if launch and target ~= nil then
-    local ping = localplayer:GetNetworkPing()
-    local targetPos = target.Position + (target.AssemblyLinearVelocity * ping)
-    
-    local r = targetPos - missile.Position
-    local losDirection = r.Unit
-    local V_c, _, _, losRateVector = getNavigationVariables(missile, target)
-    
-    local targetAccelVector = target:GetAttribute("CurrentAcceleration") or Vector3.zero
-    
-    local total_a_c = calculate3DAPN(navigationconstant, V_c, losRateVector, losDirection, targetAccelVector)
-    
-     local turnSpeed = 5.0 * dt
-    local targetRotation = CFrame.lookAt(missile.Position, missile.Position + missile.CFrame.LookVector + (total_a_c * 0.1))
-    missile.CFrame = missile.CFrame:Lerp(targetRotation, turnSpeed)
-
-    missile.AssemblyLinearVelocity = missile.CFrame.LookVector * speed
+	    local ping = localplayer:GetNetworkPing()
+	    local targetPos = target.Position + (target.AssemblyLinearVelocity * ping)
+	    
+	    local r = targetPos - missile.Position
+	    local losDirection = r.Unit
+	    local V_c, _, _, losRateVector = getNavigationVariables(missile, target)
+	    
+	    local targetAccelVector = target:GetAttribute("CurrentAcceleration") or Vector3.zero
+	    
+	    local total_a_c = calculate3DAPN(navigationconstant, V_c, losRateVector, losDirection, targetAccelVector)
+	    
+	    local turnSpeed = 5.0 * dt
+	    local targetRotation = CFrame.lookAt(missile.Position, missile.Position + missile.CFrame.LookVector + (total_a_c * 0.1))
+	    missile.CFrame = missile.CFrame:Lerp(targetRotation, turnSpeed)
+	
+	    missile.AssemblyLinearVelocity = missile.CFrame.LookVector * speed
 		if (missile.Position-calculatedtargetpos).Magnitude < 15 then
 				local newdist = (missile.Position-(calculatedtargetpos+(target.Velocity*ping))).Magnitude
 				task.wait(newdist/(missilevelocity.Magnitude))
