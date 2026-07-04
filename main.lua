@@ -383,13 +383,13 @@ mainheart = game:GetService("RunService").Stepped:Connect(function(dt)
 	    
 	    local total_a_c = calculate3DAPN(navigationconstant, V_c, losRateVector, losDirection, targetAccelVector)
 	    
-	    local turnSpeed = 5.0 * dt
+	    local turnSpeed = 1 * dt
 	    local targetRotation = CFrame.lookAt(missile.Position, missile.Position + missile.CFrame.LookVector + (total_a_c * 0.1))
 	    missile.CFrame = missile.CFrame:Lerp(targetRotation, turnSpeed)
-	
+		predictedPart.Position = targetPos
 	    missile.AssemblyLinearVelocity = missile.CFrame.LookVector * speed
-		if (missile.Position-calculatedtargetpos).Magnitude < 15 then
-				local newdist = (missile.Position-(calculatedtargetpos+(target.Velocity*ping))).Magnitude
+		if (missile.Position-targetPos).Magnitude < 15 then
+				local newdist = (missile.Position-(targetPos+(target.Velocity*ping))).Magnitude
 				task.wait(newdist/(missilevelocity.Magnitude))
 				for i,v in pairs(missile.Parent.Parent:GetChildren()) do
 					if v.Name == "ExplosiveBlock" then
