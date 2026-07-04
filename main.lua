@@ -359,7 +359,7 @@ local missilesmoothedaccel = Vector3.new(0,0,0)
 
 local targetlastacceleration = Vector3.new(0,0,0)
 
-
+local sensitivityFactor = 50000
 local localplayer = game:GetService("Players").LocalPlayer
 local target = nil
 local speed = 800
