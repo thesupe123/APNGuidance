@@ -291,7 +291,7 @@ handles.Faces = Faces.new(Enum.NormalId.Top)
 
 
 local runservice = game:GetService("RunService")
-local navigationconstant = 4.5
+local navigationconstant = 1
 
 local players = game:GetService("Players")
 local localplayer = players.LocalPlayer
@@ -359,7 +359,6 @@ local missilesmoothedaccel = Vector3.new(0,0,0)
 
 local targetlastacceleration = Vector3.new(0,0,0)
 
-local responsiveness = 15
 
 local localplayer = game:GetService("Players").LocalPlayer
 local target = nil
