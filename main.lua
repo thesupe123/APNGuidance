@@ -366,7 +366,7 @@ bg.Parent = missile
 local sensitivityFactor = 50000
 local localplayer = game:GetService("Players").LocalPlayer
 local target = nil
-local speed = 800
+local speed = 1500
 local VirtualInputManager = game:GetService("VirtualInputManager")
 mainheart = game:GetService("RunService").Stepped:Connect(function(dt)
 	if targetPlayer and launch then
