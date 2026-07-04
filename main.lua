@@ -291,7 +291,7 @@ handles.Faces = Faces.new(Enum.NormalId.Top)
 
 
 local runservice = game:GetService("RunService")
-local navigationconstant = 10
+local navigationconstant = 5
 
 local players = game:GetService("Players")
 local localplayer = players.LocalPlayer
@@ -358,8 +358,12 @@ local targetsmoothedaccel = Vector3.new(0,0,0)
 local missilesmoothedaccel = Vector3.new(0,0,0)
 
 local targetlastacceleration = Vector3.new(0,0,0)
-
-local sensitivityFactor = 10000
+local bg = Instance.new("BodyGyro")
+bg.MaxTorque = Vector3.new(1, 1, 1) * 100000 -- Adjust if too weak
+bg.P = 3000       -- "Stiffness" (Turn speed)
+bg.D = 500        -- "Damping" (Crucial for stopping the shake)
+bg.Parent = missile
+local sensitivityFactor = 50000
 local localplayer = game:GetService("Players").LocalPlayer
 local target = nil
 local speed = 800
@@ -369,6 +373,7 @@ mainheart = game:GetService("RunService").Stepped:Connect(function(dt)
 		game.Workspace.CurrentCamera.CameraSubject = missile
 		target = targetPlayer.Character:FindFirstChild("HumanoidRootPart")
 		missile = game.Workspace[localplayer.Name.." Aircraft"]:FindFirstChildOfClass("Folder").ExplosiveBlock.Decorate
+		bg.Parent = missile
 	end
 	if launch and target ~= nil then
 	    local ping = localplayer:GetNetworkPing()
@@ -386,7 +391,6 @@ mainheart = game:GetService("RunService").Stepped:Connect(function(dt)
 		local pitchTorque = local_accel.Y * sensitivityFactor
 		local yawTorque = local_accel.X * sensitivityFactor
 
-		Instance.new("BodyGyro").Parent = missile
 		missile.BodyGyro.MaxTorque = Vector3.new(1, 1, 1) * 100000
 		missile.BodyGyro.CFrame = missile.CFrame * CFrame.Angles(pitchTorque, yawTorque, 0)
 			
